@@ -669,7 +669,7 @@ function AdminPanel({ onLogout }) {
                         <td>
                           <button
                             type="button"
-                            className="admin-icon-btn admin-expand-trigger"
+                            className="admin-icon-btn admin-expand-trigger admin-variant-expand-btn"
                             aria-label={isExpanded ? "Collapse variants" : "Expand variants"}
                             title={isExpanded ? "Collapse variants" : "Expand variants"}
                             onClick={(e) => {
@@ -699,7 +699,7 @@ function AdminPanel({ onLogout }) {
                           <div className="admin-row-actions">
                             <button
                               type="button"
-                              className="admin-icon-btn"
+                              className="admin-icon-btn admin-row-action-btn"
                               aria-label="Edit product"
                               title="Edit product"
                               onClick={(e) => {
@@ -711,7 +711,7 @@ function AdminPanel({ onLogout }) {
                             </button>
                             <button
                               type="button"
-                              className="admin-icon-btn admin-icon-btn-danger"
+                              className="admin-icon-btn admin-icon-btn-danger admin-row-action-btn admin-row-action-btn-danger"
                               aria-label="Delete product"
                               title="Delete product"
                               onClick={(e) => {
@@ -813,7 +813,7 @@ function AdminPanel({ onLogout }) {
                                           </>
                                         ) : (
                                           <button
-                                            className="admin-icon-btn admin-icon-btn-sm"
+                                            className="admin-icon-btn admin-icon-btn-sm admin-variant-edit-btn"
                                             type="button"
                                             aria-label="Edit variant price"
                                             title="Edit"
@@ -829,7 +829,7 @@ function AdminPanel({ onLogout }) {
                                           </button>
                                         )}
                                         <button
-                                          className="admin-icon-btn admin-icon-btn-sm admin-icon-btn-danger"
+                                          className="admin-icon-btn admin-icon-btn-sm admin-icon-btn-danger admin-variant-delete-btn"
                                           type="button"
                                           aria-label="Delete variant"
                                           title="Delete"
@@ -910,7 +910,7 @@ function AdminPanel({ onLogout }) {
               {selectedProductId ? (
                 <>
                   <div className="admin-modal-primary-actions">
-                    <button className="btn btn-outline" type="button" onClick={closeProductForm}>
+                    <button className="btn btn-outline admin-modal-cancel-btn" type="button" onClick={closeProductForm}>
                       Close
                     </button>
                     <button className="btn btn-primary" type="button" onClick={saveProduct}>
@@ -920,7 +920,7 @@ function AdminPanel({ onLogout }) {
                 </>
               ) : (
                 <div className="admin-modal-primary-actions">
-                  <button className="btn btn-outline" type="button" onClick={closeProductForm}>
+                  <button className="btn btn-outline admin-modal-cancel-btn" type="button" onClick={closeProductForm}>
                     Close
                   </button>
                   <button className="btn btn-primary" type="button" onClick={addProduct}>
@@ -1245,7 +1245,7 @@ function PublicSite() {
           </div>
           {!isMobileView && !showAllProducts && publicProducts.length > 4 ? (
             <div className="section-cta">
-              <button className="btn btn-outline" type="button" onClick={() => setShowAllProducts(true)}>
+              <button className="btn btn-outline see-all-products-btn" type="button" onClick={() => setShowAllProducts(true)}>
                 See all products
               </button>
             </div>
