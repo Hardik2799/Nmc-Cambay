@@ -1664,6 +1664,44 @@ h2 {
   margin-top: 0.05rem;
 }
 
+.readmore-dialog-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 140;
+  background: rgba(12, 18, 40, 0.45);
+  backdrop-filter: blur(2px);
+  display: grid;
+  place-items: center;
+  padding: 1rem;
+}
+
+.readmore-dialog-card {
+  width: min(720px, 100%);
+  max-height: calc(100dvh - 2rem);
+  overflow: auto;
+  display: grid;
+  gap: 0.8rem;
+}
+
+.readmore-dialog-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+}
+
+.readmore-dialog-head h3 {
+  margin: 0;
+  color: var(--text-primary);
+}
+
+.readmore-dialog-body {
+  color: var(--text-secondary);
+  font-weight: 600;
+  line-height: 1.55;
+  white-space: pre-wrap;
+}
+
 .admin-variant-list {
   margin-top: 0.9rem;
   display: grid;
@@ -1764,11 +1802,13 @@ h2 {
   box-shadow: 0 10px 18px rgba(220, 38, 38, 0.22);
 }
 
-.product-variant-toggle:hover,
-.product-variant-toggle.btn-outline:hover {
-  background: #ffffff;
-  color: #dc2626;
-  border-color: #dc2626;
+@media (hover: hover) and (pointer: fine) {
+  .product-variant-toggle:hover,
+  .product-variant-toggle.btn-outline:hover {
+    background: #ffffff;
+    color: #dc2626;
+    border-color: #dc2626;
+  }
 }
 
 .product-variant-toggle-icon {

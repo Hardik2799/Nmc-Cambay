@@ -28,7 +28,15 @@ const ADMIN_SESSION_KEY = "nmc_admin_authed_v1";
 const VARIANT_OPTIONS = ["250gm", "500gm", "1kg"];
 const DESC_PREVIEW_MAX_WORDS = 5;
 
-function DescriptionExcerpt({ text, className = "", variant = "public", empty = null, expanded, onToggleExpanded }) {
+function DescriptionExcerpt({
+  text,
+  className = "",
+  variant = "public",
+  empty = null,
+  expanded,
+  onToggleExpanded,
+  dialogMode = false,
+}) {
   const [expandedLocal, setExpandedLocal] = useState(false);
   const isControlled = typeof expanded === "boolean" && typeof onToggleExpanded === "function";
   const isExpanded = isControlled ? expanded : expandedLocal;
@@ -52,24 +60,30 @@ function DescriptionExcerpt({ text, className = "", variant = "public", empty = 
     return <Tag className={className}>{full}</Tag>;
   }
 
+  const excerptText = dialogMode ? `${preview}...` : isExpanded ? full : `${preview}...`;
+
   return (
     <Tag className={className}>
-      <span className="desc-excerpt-text">{isExpanded ? full : `${preview}...`}</span>{" "}
+      <span className="desc-excerpt-text">{excerptText}</span>{" "}
       <button
         type="button"
         className="desc-read-more"
         onClick={(e) => {
           e.stopPropagation();
+          if (dialogMode) {
+            onToggleExpanded?.();
+            return;
+          }
           if (isControlled) {
             onToggleExpanded();
             return;
           }
           setExpandedLocal((prev) => !prev);
         }}
-        aria-expanded={isExpanded}
-        aria-label={isExpanded ? "Show less description" : "Read full description"}
+        aria-expanded={dialogMode ? false : isExpanded}
+        aria-label={dialogMode ? "Read full description in dialog" : isExpanded ? "Show less description" : "Read full description"}
       >
-        {isExpanded ? "Show less" : "Read more"}
+        {dialogMode ? "Read more" : isExpanded ? "Show less" : "Read more"}
       </button>
     </Tag>
   );
@@ -934,7 +948,7 @@ function PublicSite() {
   );
   const [showAllProducts, setShowAllProducts] = useState(false);
   const [openVariantProductId, setOpenVariantProductId] = useState(null);
-  const [expandedDescriptionProductId, setExpandedDescriptionProductId] = useState(null);
+  const [descriptionDialog, setDescriptionDialog] = useState(null);
   const productCardRefs = useRef({});
 
   useEffect(() => {
@@ -945,6 +959,15 @@ function PublicSite() {
     window.addEventListener("keydown", onKeyDown);
     return () => window.removeEventListener("keydown", onKeyDown);
   }, [isMenuOpen]);
+
+  useEffect(() => {
+    if (!descriptionDialog) return;
+    const onKeyDown = (e) => {
+      if (e.key === "Escape") setDescriptionDialog(null);
+    };
+    window.addEventListener("keydown", onKeyDown);
+    return () => window.removeEventListener("keydown", onKeyDown);
+  }, [descriptionDialog]);
 
   useEffect(() => {
     if (typeof window === "undefined") return;
@@ -1002,8 +1025,8 @@ function PublicSite() {
     });
   };
 
-  const toggleDescriptionExpanded = (productId) => {
-    setExpandedDescriptionProductId((prev) => (prev === productId ? null : productId));
+  const openDescriptionDialog = (product) => {
+    setDescriptionDialog({ id: product.id, name: product.name, desc: product.desc || "" });
   };
 
   const [cart, setCart] = useState({});
@@ -1171,8 +1194,8 @@ function PublicSite() {
                   <DescriptionExcerpt
                     text={p.desc}
                     className="product-desc"
-                    expanded={expandedDescriptionProductId === p.id}
-                    onToggleExpanded={() => toggleDescriptionExpanded(p.id)}
+                    dialogMode
+                    onToggleExpanded={() => openDescriptionDialog(p)}
                   />
                 ) : null}
                 <button
@@ -1380,6 +1403,31 @@ function PublicSite() {
             </a>
           </div>
         </section>
+
+        {descriptionDialog ? (
+          <div className="readmore-dialog-backdrop" onClick={() => setDescriptionDialog(null)}>
+            <article
+              className="card readmore-dialog-card"
+              role="dialog"
+              aria-modal="true"
+              aria-label={`${descriptionDialog.name} description`}
+              onClick={(e) => e.stopPropagation()}
+            >
+              <div className="readmore-dialog-head">
+                <h3>{descriptionDialog.name}</h3>
+                <button
+                  type="button"
+                  className="admin-icon-btn"
+                  onClick={() => setDescriptionDialog(null)}
+                  aria-label="Close description dialog"
+                >
+                  <FaXmark aria-hidden="true" />
+                </button>
+              </div>
+              <div className="readmore-dialog-body">{descriptionDialog.desc}</div>
+            </article>
+          </div>
+        ) : null}
       </main>
 
       <footer className="mini-footer">© {new Date().getFullYear()} Nanalal Maganlal Chavanawala. All Rights Reserved.</footer>
