@@ -20,6 +20,8 @@ import {
 import { createProduct, deleteProduct, setProductVariants, subscribeProducts, updateProduct, variantSortKey } from "./productsStore";
 
 const whatsappUrl = "https://wa.me/c/919825412940";
+const mapsDestination = "NANALAL MAGANLAL CHAVANAWALA, Gawara Rd, Vasda Wad, Rana Chakla, Khambhat, Gujarat 388620";
+const directionsUrl = `https://www.google.com/maps/dir/?api=1&origin=${encodeURIComponent("My Location")}&destination=${encodeURIComponent(mapsDestination)}&travelmode=driving`;
 const ADMIN_USER = "nanamagan1950@gmail.com";
 const ADMIN_PASS = "nmc.cambay@1950";
 const ADMIN_SESSION_KEY = "nmc_admin_authed_v1";
@@ -54,7 +56,10 @@ function DescriptionExcerpt({ text, className = "", variant = "public", empty = 
       <button
         type="button"
         className="desc-read-more"
-        onClick={(e) => e.stopPropagation()}
+        onClick={(e) => {
+          e.stopPropagation();
+          setExpanded((prev) => !prev);
+        }}
         aria-expanded={expanded}
         aria-label={expanded ? "Show less description" : "Read full description"}
       >
@@ -1272,7 +1277,7 @@ function PublicSite() {
                 </a>
                 <a
                   className="btn btn-outline"
-                  href="https://www.google.com/maps/dir//NANALAL+MAGANLAL+CHAVANAWALA,+Gawara+Rd,+Vasda+Wad,+Rana+Chakla,+Khambhat,+Gujarat+388620/@23.0230329,72.5298643,15z/data=!4m8!4m7!1m0!1m5!1m1!1s0x395f06a5b23e08dd:0x64debf2bbc32e223!2m2!1d72.6230255!2d22.3167349?entry=ttu&g_ep=EgoyMDI2MDQxMy4wIKXMDSoASAFQAw%3D%3D"
+                  href={directionsUrl}
                   target="_blank"
                   rel="noreferrer"
                 >
