@@ -28,8 +28,10 @@ const ADMIN_SESSION_KEY = "nmc_admin_authed_v1";
 const VARIANT_OPTIONS = ["250gm", "500gm", "1kg"];
 const DESC_PREVIEW_MAX_WORDS = 5;
 
-function DescriptionExcerpt({ text, className = "", variant = "public", empty = null }) {
-  const [expanded, setExpanded] = useState(false);
+function DescriptionExcerpt({ text, className = "", variant = "public", empty = null, expanded, onToggleExpanded }) {
+  const [expandedLocal, setExpandedLocal] = useState(false);
+  const isControlled = typeof expanded === "boolean" && typeof onToggleExpanded === "function";
+  const isExpanded = isControlled ? expanded : expandedLocal;
   const { needsTruncate, preview, full } = useMemo(() => {
     const t = (text || "").trim();
     if (!t) return { needsTruncate: false, preview: "", full: "" };
@@ -52,18 +54,22 @@ function DescriptionExcerpt({ text, className = "", variant = "public", empty = 
 
   return (
     <Tag className={className}>
-      <span className="desc-excerpt-text">{expanded ? full : `${preview}...`}</span>{" "}
+      <span className="desc-excerpt-text">{isExpanded ? full : `${preview}...`}</span>{" "}
       <button
         type="button"
         className="desc-read-more"
         onClick={(e) => {
           e.stopPropagation();
-          setExpanded((prev) => !prev);
+          if (isControlled) {
+            onToggleExpanded();
+            return;
+          }
+          setExpandedLocal((prev) => !prev);
         }}
-        aria-expanded={expanded}
-        aria-label={expanded ? "Show less description" : "Read full description"}
+        aria-expanded={isExpanded}
+        aria-label={isExpanded ? "Show less description" : "Read full description"}
       >
-        {expanded ? "Show less" : "Read more"}
+        {isExpanded ? "Show less" : "Read more"}
       </button>
     </Tag>
   );
@@ -263,6 +269,7 @@ function AdminPanel({ onLogout }) {
   const [selectedProductId, setSelectedProductId] = useState(null);
   const [isProductFormOpen, setIsProductFormOpen] = useState(false);
   const [expandedProductId, setExpandedProductId] = useState(null);
+  const [expandedAdminDescriptionId, setExpandedAdminDescriptionId] = useState(null);
   const [variantQty, setVariantQty] = useState(VARIANT_OPTIONS[0]);
   const [variantPrice, setVariantPrice] = useState("");
   const [variantDraftPrices, setVariantDraftPrices] = useState({});
@@ -585,10 +592,10 @@ function AdminPanel({ onLogout }) {
           <p className="admin-subtitle">Manage products & variants</p>
         </div>
         <div className="admin-topbar-actions">
-          <a className="btn btn-outline" href="/">
+          <a className="btn btn-outline admin-view-website-btn" href="/">
             View website
           </a>
-          <button className="btn btn-outline" type="button" onClick={onLogout}>
+          <button className="btn btn-outline admin-logout-btn" type="button" onClick={onLogout}>
             Logout
           </button>
         </div>
@@ -662,7 +669,16 @@ function AdminPanel({ onLogout }) {
                         <td>{p.orderNo != null ? p.orderNo : "-"}</td>
                         <td>{p.name}</td>
                         <td className="admin-td-desc">
-                          <DescriptionExcerpt text={p.desc} variant="admin" className="admin-table-desc" empty="-" />
+                          <DescriptionExcerpt
+                            text={p.desc}
+                            variant="admin"
+                            className="admin-table-desc"
+                            empty="-"
+                            expanded={expandedAdminDescriptionId === p.id}
+                            onToggleExpanded={() =>
+                              setExpandedAdminDescriptionId((prev) => (prev === p.id ? null : p.id))
+                            }
+                          />
                         </td>
                         <td>{(p.variants || []).length}</td>
                         <td>
@@ -918,6 +934,7 @@ function PublicSite() {
   );
   const [showAllProducts, setShowAllProducts] = useState(false);
   const [openVariantProductId, setOpenVariantProductId] = useState(null);
+  const [expandedDescriptionProductId, setExpandedDescriptionProductId] = useState(null);
   const productCardRefs = useRef({});
 
   useEffect(() => {
@@ -972,12 +989,22 @@ function PublicSite() {
     return showAllProducts ? publicProducts : publicProducts.slice(0, 4);
   }, [isMobileView, showAllProducts, publicProducts]);
 
-  useEffect(() => {
-    if (!openVariantProductId) return;
-    const cardEl = productCardRefs.current[openVariantProductId];
-    if (!cardEl) return;
-    cardEl.scrollIntoView({ behavior: "smooth", block: "nearest", inline: "nearest" });
-  }, [openVariantProductId]);
+  const toggleVariantOptions = (productId) => {
+    setOpenVariantProductId((prev) => {
+      const nextId = prev === productId ? null : productId;
+      if (nextId) {
+        const cardEl = productCardRefs.current[nextId];
+        if (cardEl) {
+          cardEl.scrollIntoView({ behavior: "smooth", block: "nearest", inline: "nearest" });
+        }
+      }
+      return nextId;
+    });
+  };
+
+  const toggleDescriptionExpanded = (productId) => {
+    setExpandedDescriptionProductId((prev) => (prev === productId ? null : productId));
+  };
 
   const [cart, setCart] = useState({});
 
@@ -1140,12 +1167,19 @@ function PublicSite() {
                   <div className="product-image" aria-hidden="true" />
                 )}
                 <h3>{p.name}</h3>
-                {p.desc ? <DescriptionExcerpt text={p.desc} className="product-desc" /> : null}
+                {p.desc ? (
+                  <DescriptionExcerpt
+                    text={p.desc}
+                    className="product-desc"
+                    expanded={expandedDescriptionProductId === p.id}
+                    onToggleExpanded={() => toggleDescriptionExpanded(p.id)}
+                  />
+                ) : null}
                 <button
                   type="button"
                   className="btn btn-outline btn-sm product-variant-toggle"
                   aria-label={openVariantProductId === p.id ? "Hide variants" : "Show variants"}
-                  onClick={() => setOpenVariantProductId((prev) => (prev === p.id ? null : p.id))}
+                  onClick={() => toggleVariantOptions(p.id)}
                 >
                   <span className="product-variant-toggle-icon" aria-hidden="true">
                     {openVariantProductId === p.id ? "−" : "+"}
@@ -1276,7 +1310,7 @@ function PublicSite() {
                   <span>WhatsApp Catalog</span>
                 </a>
                 <a
-                  className="btn btn-outline"
+                  className="btn btn-outline btn-map-theme"
                   href={directionsUrl}
                   target="_blank"
                   rel="noreferrer"
