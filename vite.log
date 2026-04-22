@@ -1,0 +1,78 @@
+
+  VITE v8.0.8  ready in 304 ms
+
+  ➜  Local:   http://localhost:2800/
+  ➜  Network: http://192.168.0.58:2800/
+10:53:35 am [vite] (client) hmr update /src/App.jsx
+10:55:38 am [vite] (client) hmr update /src/App.jsx
+10:56:11 am [vite] (client) hmr update /src/styles.css
+10:57:17 am [vite] (client) hmr update /src/App.jsx
+11:09:21 am [vite] (client) hmr update /src/App.jsx
+11:10:18 am [vite] (client) hmr update /src/styles.css
+11:10:22 am [vite] (client) page reload index.html
+11:10:22 am [vite] vite.config.js changed, restarting server...
+11:10:22 am [vite] server restarted.
+11:22:44 am [vite] (client) hmr update /src/styles.css
+11:22:44 am [vite] (client) page reload src/main.jsx
+11:22:44 am [vite] (client) hmr update /src/App.jsx
+11:22:44 am [vite] vite.config.js changed, restarting server...
+11:22:44 am [vite] (client) page reload index.html
+11:22:44 am [vite] server restarted.
+11:26:23 am [vite] (client) page reload index.html
+11:26:23 am [vite] vite.config.js changed, restarting server...
+11:26:23 am [vite] server restarted.
+11:27:33 am [vite] (client) hmr update /src/App.jsx
+11:29:58 am [vite] (client) hmr update /src/styles.css
+11:44:08 am [vite] (client) hmr update /src/App.jsx
+11:44:09 am [vite] (client) ✨ new dependencies optimized: react-icons/fa6
+11:44:09 am [vite] (client) ✨ optimized dependencies changed. reloading
+11:45:00 am [vite] (client) hmr update /src/App.jsx
+11:45:22 am [vite] (client) hmr update /src/styles.css
+11:48:58 am [vite] (client) page reload index.html
+11:49:06 am [vite] (client) hmr update /src/App.jsx
+11:49:11 am [vite] (client) hmr update /src/styles.css
+11:50:32 am [vite] (client) hmr update /src/App.jsx
+11:50:38 am [vite] (client) hmr update /src/styles.css
+11:51:21 am [vite] (client) hmr update /src/App.jsx
+11:51:39 am [vite] (client) hmr update /src/styles.css
+11:52:45 am [vite] (client) page reload index.html
+11:52:48 am [vite] (client) hmr update /src/App.jsx
+11:53:33 am [vite] (client) hmr update /src/App.jsx
+11:54:02 am [vite] (client) hmr update /src/styles.css
+11:54:25 am [vite] (client) page reload index.html
+11:54:25 am [vite] vite.config.js changed, restarting server...
+11:54:25 am [vite] (client) page reload src/main.jsx
+11:54:25 am [vite] server restarted.
+12:02:55 pm [vite] (client) hmr update /src/App.jsx
+12:03:01 pm [vite] (client) hmr update /src/styles.css
+12:06:40 pm [vite] (client) hmr update /src/App.jsx
+12:06:45 pm [vite] (client) page reload index.html
+12:06:52 pm [vite] (client) hmr update /src/styles.css
+12:08:15 pm [vite] (client) hmr update /src/App.jsx
+12:08:53 pm [vite] (client) hmr update /src/styles.css
+12:15:16 pm [vite] (client) hmr update /src/styles.css
+12:17:05 pm [vite] (client) hmr update /src/styles.css
+12:25:48 pm [vite] (client) page reload index.html
+1:11:49 pm [vite] (client) page reload index.html
+1:12:03 pm [vite] (client) page reload index.html
+1:12:03 pm [vite] vite.config.js changed, restarting server...
+1:12:03 pm [vite] (client) page reload src/main.jsx
+1:12:03 pm [vite] (client) hmr update /src/App.jsx
+1:12:03 pm [vite] server restarted.
+4:03:12 pm [vite] (client) hmr update /src/App.jsx
+4:03:12 pm [vite] (client) hmr update /src/styles.css
+4:03:12 pm [vite] (client) page reload src/main.jsx
+4:03:12 pm [vite] vite.config.js changed, restarting server...
+4:03:12 pm [vite] (client) page reload index.html
+4:03:12 pm [vite] server restarted.
+4:06:29 pm [vite] (client) hmr update /src/styles.css
+4:10:59 pm [vite] (client) hmr update /src/App.jsx
+4:12:20 pm [vite] (client) hmr update /src/styles.css
+4:12:26 pm [vite] (client) hmr update /src/styles.css
+4:12:42 pm [vite] (client) hmr update /src/styles.css
+4:13:44 pm [vite] vite.config.js changed, restarting server...
+4:13:44 pm [vite] server restarted.
+4:14:41 pm [vite] (client) hmr update /src/App.jsx
+4:14:45 pm [vite] (client) hmr update /src/styles.css
+4:14:50 pm [vite] (client) hmr update /src/styles.css
+4:15:18 pm [vite] (client) hmr update /src/styles.css

@@ -1,0 +1,16 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
+  <!-- Simple + readable at 16px: one shape, one wordmark -->
+  <rect x="2" y="2" width="60" height="60" rx="14" fill="#e31e24" />
+  <text
+    x="32"
+    y="40"
+    text-anchor="middle"
+    font-size="20"
+    font-family="system-ui, -apple-system, Segoe UI, Arial, sans-serif"
+    font-weight="900"
+    fill="#ffffff"
+    letter-spacing="0.02em"
+  >
+    NMC
+  </text>
+</svg>
