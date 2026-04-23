@@ -290,7 +290,12 @@ function AdminPanel({ onLogout }) {
   const [editingVariantKey, setEditingVariantKey] = useState(null);
   const [error, setError] = useState("");
   const [successMessage, setSuccessMessage] = useState("");
+  const [confirmDialog, setConfirmDialog] = useState(null);
+  const [searchQuery, setSearchQuery] = useState("");
+  const [currentPage, setCurrentPage] = useState(1);
+  const [itemsPerPage, setItemsPerPage] = useState(5);
   const [tableSort, setTableSort] = useState({ key: "orderNo", direction: "asc" });
+  const imageInputRef = useRef(null);
   const DESCRIPTION_MAX_LENGTH = 5000;
 
   const showSuccess = (message) => {
@@ -338,6 +343,37 @@ function AdminPanel({ onLogout }) {
 
     return sorted;
   }, [items, tableSort]);
+
+  const filteredItems = useMemo(() => {
+    const q = searchQuery.trim().toLowerCase();
+    if (!q) return sortedItems;
+    return sortedItems.filter((item) => {
+      const nameMatch = (item.name || "").toLowerCase().includes(q);
+      const descMatch = (item.desc || "").toLowerCase().includes(q);
+      const variantMatch = (item.sortedVariants || []).some((v) => {
+        const qtyMatch = String(v.qty || "").toLowerCase().includes(q);
+        const priceMatch = String(v.price ?? "").toLowerCase().includes(q);
+        return qtyMatch || priceMatch;
+      });
+      return nameMatch || descMatch || variantMatch;
+    });
+  }, [sortedItems, searchQuery]);
+
+  const totalPages = Math.max(1, Math.ceil(filteredItems.length / itemsPerPage));
+  const paginatedItems = useMemo(() => {
+    const start = (currentPage - 1) * itemsPerPage;
+    return filteredItems.slice(start, start + itemsPerPage);
+  }, [filteredItems, currentPage, itemsPerPage]);
+  const pageStart = filteredItems.length === 0 ? 0 : (currentPage - 1) * itemsPerPage + 1;
+  const pageEnd = filteredItems.length === 0 ? 0 : Math.min(currentPage * itemsPerPage, filteredItems.length);
+
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [searchQuery, itemsPerPage]);
+
+  useEffect(() => {
+    if (currentPage > totalPages) setCurrentPage(totalPages);
+  }, [currentPage, totalPages]);
 
   const toggleTableSort = (key) => {
     setTableSort((prev) => {
@@ -444,6 +480,7 @@ function AdminPanel({ onLogout }) {
     setSelectedImageFile(null);
     setSelectedImageName("");
     setSelectedImageSrc("");
+    if (imageInputRef.current) imageInputRef.current.value = "";
   };
 
   const addProduct = async () => {
@@ -597,6 +634,40 @@ function AdminPanel({ onLogout }) {
     if (selectedProductId && selectedProduct?.imageUrl) return selectedProduct.imageUrl;
     return "";
   }, [selectedImageSrc, selectedProductId, selectedProduct]);
+  const imageError = error.includes("image") ? error : "";
+  const orderNoError = error.includes("Order No") ? error : "";
+  const formGeneralError = error && !orderNoError && !imageError ? error : "";
+
+  const requestDeleteProduct = (product) => {
+    setConfirmDialog({
+      type: "product",
+      productId: product.id,
+      title: "Delete Product",
+      message: `Are you sure you want to delete ${product.name}? This action cannot be undone.`,
+      confirmLabel: "Delete Product",
+    });
+  };
+
+  const requestDeleteVariant = (product, qty) => {
+    setConfirmDialog({
+      type: "variant",
+      productId: product.id,
+      qty,
+      title: "Delete Variant",
+      message: `Are you sure you want to delete the ${qty} variant from ${product.name}?`,
+      confirmLabel: "Delete Variant",
+    });
+  };
+
+  const confirmDeleteAction = async () => {
+    if (!confirmDialog) return;
+    if (confirmDialog.type === "product") {
+      await removeProduct(confirmDialog.productId);
+    } else if (confirmDialog.type === "variant") {
+      await removeVariant(confirmDialog.productId, confirmDialog.qty);
+    }
+    setConfirmDialog(null);
+  };
 
   return (
     <div className="admin-shell">
@@ -623,42 +694,51 @@ function AdminPanel({ onLogout }) {
               Add Product
             </button>
           </div>
-          {sortedItems.length === 0 ? (
+          <div className="admin-table-filters">
+            <input
+              className="admin-input admin-search-input"
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              placeholder="Search by product, description, variant qty, or variant price"
+            />
+          </div>
+          {filteredItems.length === 0 ? (
             <p className="admin-muted">No products yet.</p>
           ) : (
-            <table className="admin-table">
-              <thead>
-                <tr>
-                  <th aria-label="Expand" />
-                  <th>
-                    <button type="button" className="admin-sort-btn" onClick={() => toggleTableSort("orderNo")}>
-                      <span>Order No</span>
-                      <span className="admin-sort-icon">{sortIndicator("orderNo")}</span>
-                    </button>
-                  </th>
-                  <th>
-                    <button type="button" className="admin-sort-btn" onClick={() => toggleTableSort("name")}>
-                      <span>Product</span>
-                      <span className="admin-sort-icon">{sortIndicator("name")}</span>
-                    </button>
-                  </th>
-                  <th>
-                    <button type="button" className="admin-sort-btn" onClick={() => toggleTableSort("desc")}>
-                      <span>Description</span>
-                      <span className="admin-sort-icon">{sortIndicator("desc")}</span>
-                    </button>
-                  </th>
-                  <th>
-                    <button type="button" className="admin-sort-btn" onClick={() => toggleTableSort("variants")}>
-                      <span>Variants</span>
-                      <span className="admin-sort-icon">{sortIndicator("variants")}</span>
-                    </button>
-                  </th>
-                  <th>Actions</th>
-                </tr>
-              </thead>
-              <tbody>
-                {sortedItems.map((p) => {
+            <>
+              <table className="admin-table">
+                <thead>
+                  <tr>
+                    <th aria-label="Expand" />
+                    <th>
+                      <button type="button" className="admin-sort-btn" onClick={() => toggleTableSort("orderNo")}>
+                        <span>Order No</span>
+                        <span className="admin-sort-icon">{sortIndicator("orderNo")}</span>
+                      </button>
+                    </th>
+                    <th>
+                      <button type="button" className="admin-sort-btn" onClick={() => toggleTableSort("name")}>
+                        <span>Product</span>
+                        <span className="admin-sort-icon">{sortIndicator("name")}</span>
+                      </button>
+                    </th>
+                    <th>
+                      <button type="button" className="admin-sort-btn" onClick={() => toggleTableSort("desc")}>
+                        <span>Description</span>
+                        <span className="admin-sort-icon">{sortIndicator("desc")}</span>
+                      </button>
+                    </th>
+                    <th>
+                      <button type="button" className="admin-sort-btn" onClick={() => toggleTableSort("variants")}>
+                        <span>Variants</span>
+                        <span className="admin-sort-icon">{sortIndicator("variants")}</span>
+                      </button>
+                    </th>
+                    <th>Actions</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {paginatedItems.map((p) => {
                   const isExpanded = expandedProductId === p.id;
                   return (
                     <Fragment key={p.id}>
@@ -716,7 +796,7 @@ function AdminPanel({ onLogout }) {
                               title="Delete product"
                               onClick={(e) => {
                                 e.stopPropagation();
-                                removeProduct(p.id);
+                                requestDeleteProduct(p);
                               }}
                             >
                               <FaTrashCan aria-hidden="true" />
@@ -750,7 +830,10 @@ function AdminPanel({ onLogout }) {
                                     className="admin-input"
                                     inputMode="numeric"
                                     value={variantPrice}
-                                    onChange={(e) => setVariantPrice(e.target.value)}
+                                    onChange={(e) => {
+                                      const value = e.target.value;
+                                      if (/^\d*$/.test(value)) setVariantPrice(value);
+                                    }}
                                     placeholder="e.g. 120"
                                   />
                                 </label>
@@ -781,12 +864,14 @@ function AdminPanel({ onLogout }) {
                                           className="admin-input admin-variant-price"
                                           inputMode="numeric"
                                           value={variantDraftPrices[draftKey] ?? String(v.price)}
-                                          onChange={(e) =>
+                                          onChange={(e) => {
+                                            const value = e.target.value;
+                                            if (!/^\d*$/.test(value)) return;
                                             setVariantDraftPrices((prev) => ({
                                               ...prev,
-                                              [draftKey]: e.target.value,
-                                            }))
-                                          }
+                                              [draftKey]: value,
+                                            }));
+                                          }}
                                         />
                                       ) : null}
                                       <div className="admin-variant-actions">
@@ -833,7 +918,7 @@ function AdminPanel({ onLogout }) {
                                           type="button"
                                           aria-label="Delete variant"
                                           title="Delete"
-                                          onClick={() => removeVariant(p.id, v.qty)}
+                                          onClick={() => requestDeleteVariant(p, v.qty)}
                                         >
                                           <FaTrashCan aria-hidden="true" />
                                         </button>
@@ -849,9 +934,67 @@ function AdminPanel({ onLogout }) {
                       </tr>
                     </Fragment>
                   );
-                })}
-              </tbody>
-            </table>
+                  })}
+                </tbody>
+              </table>
+              <div className="admin-pagination">
+                <div className="admin-pagination-left">
+                  <label className="admin-pagination-label">
+                    Items per page:
+                    <select
+                      className="admin-pagination-select"
+                      value={itemsPerPage}
+                      onChange={(e) => setItemsPerPage(Number(e.target.value))}
+                    >
+                      <option value={5}>5</option>
+                      <option value={10}>10</option>
+                      <option value={20}>20</option>
+                    </select>
+                  </label>
+                </div>
+                <div className="admin-pagination-right">
+                  <span className="admin-page-meta">
+                    {pageStart}-{pageEnd} of {filteredItems.length}
+                  </span>
+                  <button
+                    type="button"
+                    className="admin-page-icon-btn"
+                    onClick={() => setCurrentPage(1)}
+                    disabled={currentPage === 1}
+                    aria-label="First page"
+                  >
+                    «
+                  </button>
+                  <button
+                    type="button"
+                    className="admin-page-icon-btn"
+                    onClick={() => setCurrentPage((prev) => Math.max(1, prev - 1))}
+                    disabled={currentPage === 1}
+                    aria-label="Previous page"
+                  >
+                    ‹
+                  </button>
+                  <button
+                    type="button"
+                    className="admin-page-icon-btn"
+                    onClick={() => setCurrentPage((prev) => Math.min(totalPages, prev + 1))}
+                    disabled={currentPage === totalPages}
+                    aria-label="Next page"
+                  >
+                    ›
+                  </button>
+                  <button
+                    type="button"
+                    className="admin-page-icon-btn"
+                    onClick={() => setCurrentPage(totalPages)}
+                    disabled={currentPage === totalPages}
+                    aria-label="Last page"
+                  >
+                    »
+                  </button>
+                </div>
+              </div>
+            </>
           )}
         </div>
       </div>
@@ -862,14 +1005,21 @@ function AdminPanel({ onLogout }) {
             <div className="admin-table-head">
               <h3 className="admin-card-title">{selectedProductId ? "Edit Product" : "Add Product"}</h3>
             </div>
-            {error ? <p className="admin-error">{error}</p> : null}
+            {formGeneralError ? <p className="admin-error">{formGeneralError}</p> : null}
             <label className="admin-label">
               <span className="admin-label-text">Product name <span className="admin-required-mark">*</span></span>
               <input className="admin-input" value={name} onChange={(e) => setName(e.target.value)} />
             </label>
             <label className="admin-label">
               <span className="admin-label-text">Product image <span className="admin-required-mark">*</span></span>
-              <input className="admin-input" type="file" accept="image/*" onChange={onImageSelect} />
+              {imageError ? <p className="admin-error admin-field-error">{imageError}</p> : null}
+              <input
+                ref={imageInputRef}
+                className="admin-input admin-file-input"
+                type="file"
+                accept="image/*"
+                onChange={onImageSelect}
+              />
             </label>
             {selectedImageSrc ? (
               <button className="btn btn-outline btn-sm admin-remove-image-btn" type="button" onClick={clearSelectedImage}>
@@ -885,6 +1035,7 @@ function AdminPanel({ onLogout }) {
             ) : null}
             <label className="admin-label">
               <span className="admin-label-text">Order No <span className="admin-required-mark">*</span></span>
+              {orderNoError ? <p className="admin-error admin-field-error">{orderNoError}</p> : null}
               <input
                 className="admin-input"
                 inputMode="numeric"
@@ -933,6 +1084,23 @@ function AdminPanel({ onLogout }) {
         </div>
       ) : null}
 
+      {confirmDialog ? (
+        <div className="admin-confirm-backdrop" role="presentation" onClick={() => setConfirmDialog(null)}>
+          <div className="admin-card admin-confirm-card" role="dialog" aria-modal="true" onClick={(e) => e.stopPropagation()}>
+            <h3 className="admin-card-title">{confirmDialog.title}</h3>
+            <p className="admin-confirm-text">{confirmDialog.message}</p>
+            <div className="admin-confirm-actions">
+              <button className="btn btn-outline" type="button" onClick={() => setConfirmDialog(null)}>
+                Cancel
+              </button>
+              <button className="btn admin-confirm-delete-btn" type="button" onClick={confirmDeleteAction}>
+                {confirmDialog.confirmLabel}
+              </button>
+            </div>
+          </div>
+        </div>
+      ) : null}
+
       {successMessage ? <div className="admin-success-toast">{successMessage}</div> : null}
     </div>
   );
@@ -967,6 +1135,25 @@ function PublicSite() {
     };
     window.addEventListener("keydown", onKeyDown);
     return () => window.removeEventListener("keydown", onKeyDown);
+  }, [descriptionDialog]);
+
+  useEffect(() => {
+    if (typeof document === "undefined") return;
+    const previousOverflow = document.body.style.overflow;
+    const previousTouchAction = document.body.style.touchAction;
+
+    if (descriptionDialog) {
+      document.body.style.overflow = "hidden";
+      document.body.style.touchAction = "none";
+    } else {
+      document.body.style.overflow = previousOverflow;
+      document.body.style.touchAction = previousTouchAction;
+    }
+
+    return () => {
+      document.body.style.overflow = previousOverflow;
+      document.body.style.touchAction = previousTouchAction;
+    };
   }, [descriptionDialog]);
 
   useEffect(() => {
@@ -1262,19 +1449,53 @@ function PublicSite() {
                     <span className="invoice-name">
                       {it.name} ({it.variant}) × {it.qty} - ₹{formatMoney(it.qty * it.price)}
                     </span>
-                    <button
-                      type="button"
-                      className="invoice-remove-btn"
-                      aria-label={`Remove ${it.name} (${it.variant})`}
-                      onClick={() =>
-                        setCart((prev) => ({
-                          ...prev,
-                          [it.key]: { ...prev[it.key], qty: 0 },
-                        }))
-                      }
-                    >
-                      <FaTrashCan aria-hidden="true" />
-                    </button>
+                    <div className="invoice-controls">
+                      <button
+                        type="button"
+                        className="invoice-qty-btn"
+                        aria-label={`Decrease ${it.name} (${it.variant}) quantity`}
+                        onClick={() =>
+                          setCart((prev) => {
+                            const current = prev[it.key];
+                            if (!current) return prev;
+                            const nextQty = Math.max(0, (current.qty || 0) - 1);
+                            return { ...prev, [it.key]: { ...current, qty: nextQty } };
+                          })
+                        }
+                      >
+                        −
+                      </button>
+                      <span className="invoice-qty-count" aria-label="Invoice quantity">
+                        {it.qty}
+                      </span>
+                      <button
+                        type="button"
+                        className="invoice-qty-btn"
+                        aria-label={`Increase ${it.name} (${it.variant}) quantity`}
+                        onClick={() =>
+                          setCart((prev) => {
+                            const current = prev[it.key];
+                            if (!current) return prev;
+                            return { ...prev, [it.key]: { ...current, qty: (current.qty || 0) + 1 } };
+                          })
+                        }
+                      >
+                        +
+                      </button>
+                      <button
+                        type="button"
+                        className="invoice-remove-btn"
+                        aria-label={`Remove ${it.name} (${it.variant})`}
+                        onClick={() =>
+                          setCart((prev) => ({
+                            ...prev,
+                            [it.key]: { ...prev[it.key], qty: 0 },
+                          }))
+                        }
+                      >
+                        <FaTrashCan aria-hidden="true" />
+                      </button>
+                    </div>
                   </div>
                 ))}
                 <div className="invoice-total">
