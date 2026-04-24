@@ -405,9 +405,9 @@ h2 {
 
 .badge {
   display: inline-block;
-  background: #ffe5e8;
-  color: var(--red-dark);
-  border: 1px solid #ffc5cb;
+  background: var(--red);
+  color: #ffffff;
+  border: 1px solid var(--red);
   border-radius: 999px;
   padding: 0.35rem 0.8rem;
   font-weight: 700;
@@ -633,8 +633,9 @@ h2 {
   margin-top: 1rem;
 }
 
+/* Products list only uses .grid-4: stretch so each row is one height and card CTAs can align at the bottom */
 .grid-4 {
-  align-items: start;
+  align-items: stretch;
 }
 
 .card {
@@ -688,6 +689,35 @@ h2 {
 
 .desc-read-more:hover {
   color: var(--red-dark);
+}
+
+.desc-read-more--icon {
+  flex-shrink: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 2.25rem;
+  height: 2.25rem;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  border-radius: 10px;
+  background: rgba(227, 30, 36, 0.1);
+  color: var(--red);
+  cursor: pointer;
+  text-decoration: none;
+  font-weight: 600;
+}
+
+.desc-read-more--icon:hover {
+  background: rgba(227, 30, 36, 0.18);
+  color: var(--red-dark);
+}
+
+.desc-read-more--icon svg {
+  width: 1rem;
+  height: 1rem;
+  display: block;
 }
 
 .desc-excerpt-text {
@@ -873,12 +903,6 @@ h2 {
   }
 }
 
-@media (min-width: 380px) and (max-width: 767px) {
-  .grid-4 {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-  }
-}
-
 @media (max-width: 767px) {
   .mobile-swipe-hint {
     display: inline-flex;
@@ -894,20 +918,88 @@ h2 {
     overflow-x: auto;
     overflow-y: hidden;
     max-height: none;
-    padding-right: 0;
-    padding-bottom: 0.3rem;
+    min-width: 0;
+    padding: 0 1rem calc(0.9rem + env(safe-area-inset-bottom));
+    margin: 0 -1rem 0.35rem;
+    scroll-padding: 0 1rem;
+    -webkit-overflow-scrolling: touch;
+    overscroll-behavior-x: contain;
   }
 
+  /* Flex avoids Android grid % track bugs. align-items: stretch = every slide in this row
+     shares the same height (tallest), so "Show options" lines up when two cards peek. */
   .products-scroll-wrap .grid-4 {
-    display: grid;
-    grid-auto-flow: column;
-    grid-auto-columns: minmax(82vw, 82vw);
-    gap: 0.8rem;
+    display: flex;
+    flex-direction: row;
+    flex-wrap: nowrap;
+    width: 100%;
+    min-width: 0;
+    gap: 1rem;
     scroll-snap-type: x mandatory;
+    align-items: stretch;
+  }
+
+  .products-scroll-wrap .card.product.product-admin {
+    /* Beat .product { text-align: center } — some WebView/Chrome builds mis-center inline-flex CTAs */
+    text-align: left;
   }
 
   .products-scroll-wrap .product-admin {
-    scroll-snap-align: center;
+    /* min-width: 100% with flex-basis forces one full “page” per slide on Android (avoids ~50% + peek) */
+    flex: 0 0 100%;
+    min-width: 100%;
+    max-width: 100%;
+    width: 100%;
+    box-sizing: border-box;
+    align-self: stretch;
+    min-height: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: stretch;
+    scroll-snap-align: start;
+    scroll-snap-stop: always;
+    position: relative;
+    /* clip horizontal bleed only; allow wrapped CTA text without cutting label */
+    overflow-x: hidden;
+    overflow-y: visible;
+    background: #ffffff;
+    padding-bottom: 0.9rem;
+    isolation: isolate;
+    border-radius: 14px;
+  }
+
+  .products-scroll-wrap .product-head-row {
+    max-width: 100%;
+    align-self: stretch;
+    text-align: left;
+    overflow-wrap: break-word;
+    word-wrap: break-word;
+  }
+
+  .products-scroll-wrap .product-admin .product-variant-toggle {
+    position: relative;
+    z-index: 2;
+    /* inline-flex can ignore stretch on some Android; block-level flex fills card width */
+    display: flex;
+    align-self: stretch;
+    width: 100%;
+    min-width: 0;
+    max-width: 100%;
+    box-sizing: border-box;
+    margin-top: auto;
+    margin-left: 0;
+    margin-right: 0;
+    margin-bottom: 0;
+    padding-left: 0.75rem;
+    padding-right: 0.75rem;
+    background: #22c55e;
+    color: #ffffff;
+    box-shadow: none;
+    backdrop-filter: none;
+  }
+
+  .products-scroll-wrap .product-admin .product-variant-toggle-icon {
+    background: rgba(255, 255, 255, 0.28);
   }
 }
 
@@ -1976,16 +2068,68 @@ h2 {
   text-align: left;
   display: flex;
   flex-direction: column;
+  min-height: 0;
   height: 100%;
 }
 
-.product-admin h3 {
+/* Public product card: product name + info icon only (full text in dialog) */
+.product-head-row {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: flex-start;
+  gap: 0.4rem;
+  min-height: 2.5rem;
+  margin: 0 0 0.35rem;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.product-head-name {
+  margin: 0;
+  font-size: 1rem;
+  font-weight: 800;
   line-height: 1.2;
+  color: var(--text-primary);
+  /* Shrink-wrap to text so the info icon sits right after the name, not at the far right */
+  flex: 0 1 auto;
+  min-width: 0;
+  max-width: calc(100% - 2rem);
+  width: fit-content;
   display: -webkit-box;
   -webkit-line-clamp: 2;
   -webkit-box-orient: vertical;
   overflow: hidden;
-  margin: 0 0 0.1rem;
+}
+
+/* Tight to name; red circle + white “i” (fills set in SVG) */
+.product-head-row .product-head-info-btn {
+  flex-shrink: 0;
+  align-self: center;
+  width: auto;
+  height: auto;
+  min-width: 0;
+  min-height: 0;
+  padding: 0;
+  border-radius: 0;
+  background: transparent !important;
+}
+
+.product-head-row .product-head-info-btn:hover .product-desc-info-icon-bg {
+  fill: var(--red-dark);
+}
+
+.product-head-row .product-head-info-btn .product-desc-info-svg,
+.product-head-row .product-head-info-btn svg {
+  width: 1.5rem;
+  height: 1.5rem;
+  display: block;
+  flex-shrink: 0;
+  shape-rendering: geometricPrecision;
+}
+
+.product-admin .product-head-row {
+  margin-top: 0;
 }
 
 .product-admin .product-desc {
@@ -2017,6 +2161,12 @@ h2 {
   padding-right: 0.25rem;
 }
 
+#products .products-scroll-wrap {
+  width: 100%;
+  max-width: 100%;
+  box-sizing: border-box;
+}
+
 .product-variant-toggle {
   margin-top: 0.65rem;
   border: 1px solid #22c55e;
@@ -2024,10 +2174,27 @@ h2 {
   color: #ffffff;
   border-radius: 12px;
   min-height: 40px;
-  padding: 0.35rem 0.7rem;
+  max-width: 100%;
+  padding: 0.35rem 0.6rem;
   font-weight: 600;
-  letter-spacing: 0.02em;
+  letter-spacing: 0.01em;
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+  white-space: normal;
+  flex-wrap: wrap;
+  row-gap: 0.2rem;
+  column-gap: 0.4rem;
+  justify-content: center;
+  align-content: center;
+}
+
+/* Icon fixed; label can use remaining width / wrap so "Show options" is not clipped on narrow cards */
+.product-variant-toggle > .product-variant-toggle-icon {
+  flex-shrink: 0;
+}
+
+.product-variant-toggle > span:not(.product-variant-toggle-icon) {
+  min-width: 0;
+  text-align: center;
 }
 
 .product-variant-toggle.btn-outline {
@@ -2381,6 +2548,11 @@ h2 {
 
   .grid-4 {
     grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  /* Let multi-column product cards shrink inside minmax(0,1fr) (avoids overflow on Android / narrow tablets) */
+  .grid-4 > * {
+    min-width: 0;
   }
 
   .contact-layout {

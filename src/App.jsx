@@ -28,8 +28,28 @@ const ADMIN_SESSION_KEY = "nmc_admin_authed_v1";
 const VARIANT_OPTIONS = ["250gm", "500gm", "1kg"];
 const DESC_PREVIEW_MAX_WORDS = 5;
 
+/** Filled red circle, white “i” — vector, crisp at any DPR */
+function ProductDescriptionInfoIcon() {
+  return (
+    <svg
+      className="product-desc-info-svg"
+      xmlns="http://www.w3.org/2000/svg"
+      viewBox="0 0 24 24"
+      width={24}
+      height={24}
+      aria-hidden="true"
+    >
+      <circle className="product-desc-info-icon-bg" cx="12" cy="12" r="9" fill="var(--red)" />
+      <circle cx="12" cy="8" r="1.1" fill="#ffffff" />
+      <rect x="10.9" y="9.8" width="2.2" height="6.2" rx="0.45" fill="#ffffff" />
+    </svg>
+  );
+}
+
 function DescriptionExcerpt({
   text,
+  productName,
+  asProductRow = false,
   className = "",
   variant = "public",
   empty = null,
@@ -49,6 +69,36 @@ function DescriptionExcerpt({
     }
     return { needsTruncate: true, preview: words.slice(0, DESC_PREVIEW_MAX_WORDS).join(" "), full: t };
   }, [text]);
+
+  if (asProductRow && productName != null && String(productName).trim() !== "") {
+    const t = (text || "").trim();
+    const rowClass = className ? `product-head-row ${className}`.trim() : "product-head-row";
+    if (!t) {
+      return (
+        <div className={rowClass}>
+          <h3 className="product-head-name">{productName}</h3>
+        </div>
+      );
+    }
+    return (
+      <div className={rowClass}>
+        <h3 className="product-head-name">{productName}</h3>
+        {dialogMode ? (
+          <button
+            type="button"
+            className="desc-read-more desc-read-more--icon product-head-info-btn"
+            onClick={(e) => {
+              e.stopPropagation();
+              onToggleExpanded?.();
+            }}
+            aria-label="View full description"
+          >
+            <ProductDescriptionInfoIcon />
+          </button>
+        ) : null}
+      </div>
+    );
+  }
 
   if (!(text || "").trim()) {
     if (empty === null) return null;
@@ -1376,15 +1426,14 @@ function PublicSite() {
                 ) : (
                   <div className="product-image" aria-hidden="true" />
                 )}
-                <h3>{p.name}</h3>
-                {p.desc ? (
-                  <DescriptionExcerpt
-                    text={p.desc}
-                    className="product-desc"
-                    dialogMode
-                    onToggleExpanded={() => openDescriptionDialog(p)}
-                  />
-                ) : null}
+                <DescriptionExcerpt
+                  productName={p.name}
+                  text={p.desc || ""}
+                  asProductRow
+                  className="product-title-block"
+                  dialogMode={!!(p.desc || "").trim()}
+                  onToggleExpanded={() => openDescriptionDialog(p)}
+                />
                 <button
                   type="button"
                   className="btn btn-outline btn-sm product-variant-toggle"
